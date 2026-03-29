@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD - Premium</title>
+    <style>
+        :root {
+            --primary: #ff4757;
+            --dark: #0a0a0a;
+            --white: #ffffff;
+            --gray: #888888;
+            --bg: #f4f4f4;
+            --glass: rgba(0, 0, 0, 0.9);
+            --radius: 12px;
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--dark); overflow-x: hidden; scroll-behavior: smooth; }
+
+        .nav-container {
+            position: fixed; width: 100%; top: 0; z-index: 1000; height: 80px;
+            padding: 0 10%; background: var(--glass); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between;
+            color: var(--white); border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo { 
+            font-size: 24px; font-weight: 800; border: 2px solid var(--white);
+            padding: 5px 12px; border-radius: 50%; transition: var(--transition);
+        }
+        .logo:hover { transform: rotate(360deg); color: var(--primary); border-color: var(--primary); }
+
+        .btn {
+            display: inline-block; padding: 12px 28px; border-radius: var(--radius);
+            font-weight: 700; text-decoration: none; cursor: pointer;
+            transition: var(--transition); border: none; text-align: center;
+        }
+        .btn-primary { background: var(--white); color: var(--dark); }
+        .btn-primary:hover { background: var(--primary); color: var(--white); transform: translateY(-3px); }
+        .btn-outline { background: transparent; border: 2px solid var(--dark); color: var(--dark); width: 100%; }
+        .btn-outline:hover { background: var(--dark); color: var(--white); }
+
+        .showcase { 
+            min-height: 100vh; padding: 120px 10% 60px; display: flex; 
+            align-items: center; justify-content: space-between; max-width: 1400px; 
+            margin: 0 auto; gap: 50px; 
+        }
+
+        .abstract-shape {
+            width: 350px; height: 350px; 
+            background: linear-gradient(45deg, var(--dark), var(--primary));
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morph 8s ease-in-out infinite;
+        }
+
+        .products { padding: 80px 10%; max-width: 1400px; margin: 0 auto; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 50px; }
+        
+        .product-card {
+            background: var(--white); border-radius: 20px; overflow: hidden;
+            border: 1px solid #eee; transition: var(--transition);
+        }
+        .product-card:hover { transform: translateY(-10px); box-shadow: var(--shadow); }
+        .product-img { height: 250px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .product-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px); z-index: 2000; display: flex;
+            align-items: center; justify-content: center; opacity: 0;
+            pointer-events: none; transition: var(--transition);
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--white); padding: 40px; border-radius: 24px;
+            width: 90%; max-width: 400px; transform: scale(0.8); transition: var(--transition);
+        }
+        .modal-overlay.show .modal { transform: scale(1); }
+
+        @keyframes morph { 0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 50% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
+        .reveal { opacity: 0; transform: translateY(30px); transition: var(--transition); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <nav class="nav-container">
+        <div class="logo">MD</div>
+        <a href="#" id="open-auth-nav" class="btn btn-primary">Sign In</a>
+    </nav>
+
+    <section class="showcase">
+        <div class="showcase-content">
+            <h1 style="font-size: 56px; line-height: 1.1;">Design the Future <br><span style="color:var(--primary)">With Precision.</span></h1>
+            <p style="font-size: 20px; color: var(--gray); margin: 30px 0;">Premium minimalist web interfaces for modern creators.</p>
+            <a href="#" id="open-auth-hero" class="btn btn-primary" style="background: var(--dark); color: var(--white);">Open Dashboard</a>
+        </div>
+        <div class="abstract-shape"></div>
+    </section>
+
+    <section class="products reveal">
+        <h2 style="text-align: center; font-size: 36px;">Premium Collection</h2>
+        <div class="product-grid">
+            <div class="product-card">
+                <div class="product-img"><img src="images (6).jpg" alt="Red Horse"></div>
+                <div class="product-info" style="padding: 25px; text-align: center;">
+                    <h3>Red Horse</h3>
+                    <p style="color: var(--primary); font-weight: 800; font-size: 20px; margin: 15px 0;">₱120.00</p>
+                    <a href="javascript:void(0)" class="btn btn-outline" onclick="buyItem('Red Horse', 120)">Purchase Item</a>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img"><img src="bt-tanduaydarkrhum-5yo-750ml_grande_b6c8556d-0801-4c05-906a-447d65ac3625.jpg" alt="Tanduay"></div>
+                <div class="product-info" style="padding: 25px; text-align: center;">
+                    <h3>Tanduay Pro</h3>
+                    <p style="color: var(--primary); font-weight: 800; font-size: 20px; margin: 15px 0;">₱299.00</p>
+                    <a href="javascript:void(0)" class="btn btn-outline" onclick="buyItem('Tanduay Pro', 299)">Purchase Item</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="modal-auth" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modal-title" style="text-align: center; margin-bottom: 25px;">Login</h2>
+            <form id="authForm">
+                <input type="text" id="username" placeholder="Username" required style="width:100%; padding:14px; margin-bottom:15px; border-radius:var(--radius); border:1px solid #ddd;">
+                <input type="password" id="password" placeholder="Password" required style="width:100%; padding:14px; margin-bottom:20px; border-radius:var(--radius); border:1px solid #ddd;">
+                <button type="submit" id="submit-btn" class="btn btn-primary" style="width:100%; background:var(--dark); color:var(--white);">Login</button>
+            </form>
+            <p style="text-align:center; margin-top:20px; font-size:14px;">
+                <span id="switch-mode" style="color:var(--primary); cursor:pointer; font-weight:bold;">Create an account</span>
+            </p>
+            <p id="close-modal" style="text-align:center; margin-top:20px; cursor:pointer; font-size:12px; color:var(--gray); font-weight:800;">CLOSE</p>
+        </div>
+    </div>
+
+    <script>
+    const authModal = document.getElementById('modal-auth');
+    const authForm = document.getElementById('authForm');
+    let isLogin = true;
+
+    const toggleModal = () => authModal.classList.toggle('show');
+    document.getElementById('open-auth-nav').onclick = toggleModal;
+    document.getElementById('open-auth-hero').onclick = (e) => {
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'dashboard.html';
+        } else {
+            toggleModal();
+        }
+    };
+    document.getElementById('close-modal').onclick = toggleModal;
+
+    document.getElementById('switch-mode').onclick = () => {
+        isLogin = !isLogin;
+        document.getElementById('modal-title').innerText = isLogin ? "Login" : "Sign Up";
+        document.getElementById('submit-btn').innerText = isLogin ? "Login" : "Register";
+        document.getElementById('switch-mode').innerText = isLogin ? "Create an account" : "Already have an account?";
+    };
+
+    function buyItem(itemName, price) {
+        const currentUser = localStorage.getItem('regUser');
+        if (!localStorage.getItem('isLoggedIn')) {
+            alert("Please login first to make a purchase.");
+            toggleModal();
+            return;
+        }
+
+        let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+        let userIndex = db.findIndex(u => u.username === currentUser);
+
+        if (userIndex !== -1) {
+            if (db[userIndex].balance >= price) {
+                db[userIndex].balance -= price;
+                
+                if (!db[userIndex].transactions) db[userIndex].transactions = [];
+                
+                db[userIndex].transactions.push({
+                    item: itemName,
+                    cost: price,
+                    date: new Date().toLocaleString()
+                });
+
+                localStorage.setItem('userDatabase', JSON.stringify(db));
+                localStorage.setItem('userBalance', db[userIndex].balance);
+                alert(`Success! You bought ${itemName}. Remaining balance: ₱${db[userIndex].balance.toLocaleString()}`);
+            } else {
+                alert("Insufficient funds in your account.");
+            }
+        }
+    }
+
+    authForm.onsubmit = (e) => {
+        e.preventDefault();
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        let userDatabase = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+
+        if (!isLogin) {
+            if (userDatabase.some(user => user.username === u)) {
+                alert("User already exists!");
+                return;
+            }
+            const newUser = {
+                username: u,
+                password: p,
+                balance: 1250,
+                transactions: [],
+                regDate: new Date().toLocaleString()
+            };
+            userDatabase.push(newUser);
+            localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
+            alert("Account created! You can now log in.");
+            isLogin = true;
+            document.getElementById('modal-title').innerText = "Login";
+            document.getElementById('submit-btn').innerText = "Login";
+        } else {
+            const user = userDatabase.find(x => x.username === u && x.password === p);
+            if (user) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('regUser', user.username);
+                localStorage.setItem('userBalance', user.balance);
+                
+                alert("Welcome back, " + user.username);
+                window.location.href = 'dashboard.html'; 
+            } else { 
+                alert("Invalid credentials!"); 
+            }
+        }
+    };
+
+    const obs = new IntersectionObserver((es) => es.forEach(e => e.isIntersecting && e.target.classList.add('active')));
+    document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+</script>
+</body>
+</html>

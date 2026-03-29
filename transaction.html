@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD - Transactions</title>
+    <style>
+        :root {
+            --clr-primary: #ff4757;
+            --clr-bg: #0a0a0a;
+            --clr-panel: #161616;
+            --clr-text: #ffffff;
+            --clr-gray: #888888;
+            --border-ui: rgba(255, 255, 255, 0.05);
+            --transition-main: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            --radius-lg: 24px;
+            --radius-sm: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body { 
+            background: var(--clr-bg); 
+            color: var(--clr-text); 
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+       
+        .sidebar { 
+            width: 280px; 
+            background: var(--clr-panel); 
+            padding: 40px; 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid var(--border-ui);
+            animation: fadeInRight 0.8s var(--transition-main);
+        }
+
+        .main-content { 
+            flex: 1; 
+            padding: 60px; 
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: block;
+            color: var(--clr-gray);
+            text-decoration: none;
+            padding: 14px 0;
+            font-weight: 600;
+            transition: var(--transition-main);
+        }
+
+        .nav-link:hover { color: var(--clr-text); padding-left: 10px; }
+        .nav-link.active { color: var(--clr-primary); }
+
+        /* Table Styling */
+        .transaction-container {
+            margin-top: 50px;
+            background: var(--clr-panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-ui);
+            overflow: hidden;
+            animation: fadeInUp 0.8s var(--transition-main) 0.2s backwards;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px 25px;
+            color: var(--clr-gray);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-ui);
+        }
+
+        td {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-ui);
+            font-size: 15px;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .status-pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(46, 213, 115, 0.1);
+            color: #2ed573;
+        }
+
+        .empty-state {
+            padding: 100px;
+            text-align: center;
+            color: var(--clr-gray);
+        }
+
+        .clear-btn {
+            background: transparent;
+            color: var(--clr-gray);
+            border: 1px solid var(--border-ui);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+            float: right;
+        }
+
+        .clear-btn:hover {
+            border-color: var(--clr-primary);
+            color: var(--clr-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2 style="font-size: 30px; font-weight: 900;">MD<span style="color:var(--clr-primary)">.</span></h2>
+        <nav style="margin-top: 60px; flex-grow: 1;">
+            <a href="dashboard.html" class="nav-link">DASHBOARD</a>
+            <a href="product.html" class="nav-link">MARKETPLACE</a>
+            <a href="transaction.html" class="nav-link active">TRANSACTIONS</a>
+        </nav>
+        <p style="font-size: 11px; color: var(--clr-gray); letter-spacing: 2px;">WALLET BALANCE</p>
+        <p id="balance-val" style="font-size: 20px; font-weight: 800; color: var(--clr-primary); margin-bottom: 20px;">₱0.00</p>
+    </aside>
+
+    <main class="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <h1 style="font-size: 42px; font-weight: 900;">History</h1>
+                <p style="color: var(--clr-gray); font-size: 18px;">Review your recent acquisitions.</p>
+            </div>
+            <button class="clear-btn" onclick="clearHistory()">Clear Logs</button>
+        </header>
+
+        <div class="transaction-container">
+            <table id="transaction-table">
+                <thead>
+                    <tr>
+                        <th>Asset Name</th>
+                        <th>Date</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-body">
+                    </tbody>
+            </table>
+            <div id="empty-msg" class="empty-state" style="display: none;">
+                No transactions found.
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function loadTransactions() {
+         
+            const bal = localStorage.getItem('userBalance') || '1250';
+            document.getElementById('balance-val').innerText = '₱' + parseFloat(bal).toLocaleString();
+
+           
+            const history = JSON.parse(localStorage.getItem('transactions') || '[]');
+            const tbody = document.getElementById('transaction-body');
+            const emptyMsg = document.getElementById('empty-msg');
+            const table = document.getElementById('transaction-table');
+
+            if (history.length === 0) {
+                table.style.display = 'none';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyMsg.style.display = 'none';
+            tbody.innerHTML = '';
+
+            history.forEach(tx => {
+                const row = `
+                    <tr>
+                        <td style="font-weight: 700;">${tx.item}</td>
+                        <td style="color: var(--clr-gray);">${tx.date}</td>
+                        <td style="color: var(--clr-primary); font-weight: 800;">₱${tx.cost.toLocaleString()}</td>
+                        <td><span class="status-pill">${tx.status}</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function clearHistory() {
+            if(confirm("Are you sure you want to clear your transaction history?")) {
+                localStorage.setItem('transactions', '[]');
+                localStorage.setItem('orderCount', '0');
+                loadTransactions();
+            }
+        }
+
+      
+        loadTransactions();
+    </script>
+</body>
+</html>

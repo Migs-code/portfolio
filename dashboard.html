@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD - Dashboard</title>
+    <style>
+        :root {
+            --clr-primary: #ff4757;
+            --clr-bg: #0a0a0a;
+            --clr-panel: #161616;
+            --clr-text: #ffffff;
+            --clr-gray: #888888;
+            --border-ui: rgba(255, 255, 255, 0.05);
+            --transition-main: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            --radius-lg: 24px;
+            --radius-sm: 12px;
+            --shadow-glow: 0 0 20px rgba(255, 71, 87, 0.2);
+        }
+
+        .admin-modal {
+            display: none; 
+            position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 9999; 
+            align-items: center; justify-content: center;
+        }
+
+        .admin-card {
+            background: #1a1a1a; padding: 40px; border-radius: 20px;
+            border: 1px solid var(--clr-primary); width: 300px; text-align: center;
+        }
+
+        .admin-card h2 { color: var(--clr-primary); margin-bottom: 20px; font-size: 18px; }
+
+        .admin-card .btn-admin {
+            width: 100%; padding: 12px; margin: 5px 0;
+            background: #222; border: 1px solid #333; color: white;
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .admin-card .btn-admin:hover { background: var(--clr-primary); }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        body { 
+            background: var(--clr-bg); 
+            color: var(--clr-text); 
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .sidebar { 
+            width: 280px; 
+            background: var(--clr-panel); 
+            padding: 40px; 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid var(--border-ui);
+            animation: fadeInRight 0.8s var(--transition-main);
+        }
+
+        .main-content { 
+            flex: 1; 
+            padding: 60px; 
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .nav-group { margin-top: 60px; flex-grow: 1; }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            color: var(--clr-gray);
+            text-decoration: none;
+            padding: 14px 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: var(--transition-main);
+            position: relative;
+        }
+
+        .nav-link:hover { color: var(--clr-text); padding-left: 10px; }
+        .nav-link.active { color: var(--clr-primary); }
+        
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            width: 4px;
+            height: 20px;
+            background: var(--clr-primary);
+            border-radius: 0 4px 4px 0;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .header-section {
+            animation: fadeInUp 0.8s var(--transition-main) 0.2s backwards;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-top: 50px;
+        }
+
+        .stat-card { 
+            background: var(--clr-panel); 
+            padding: 35px; 
+            border-radius: var(--radius-lg); 
+            border: 1px solid var(--border-ui); 
+            transition: var(--transition-main);
+            animation: scaleIn 0.6s var(--transition-main) backwards;
+        }
+
+        .stat-card:hover { 
+            border-color: rgba(255, 71, 87, 0.4); 
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .stat-label { 
+            color: var(--clr-gray); 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px;
+            display: block; 
+            margin-bottom: 12px; 
+        }
+
+        .stat-value { 
+            font-size: 32px; 
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .history-section {
+            margin-top: 60px;
+            animation: fadeInUp 0.8s var(--transition-main) 0.7s backwards;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: var(--clr-panel);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 20px;
+            color: var(--clr-gray);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-ui);
+        }
+
+        .history-table td {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-ui);
+            font-size: 15px;
+        }
+
+        .status-badge {
+            background: rgba(46, 213, 115, 0.1);
+            color: #2ed573;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .btn-logout { 
+            margin-top: auto; 
+            background: transparent; 
+            color: var(--clr-primary); 
+            padding: 14px; 
+            border-radius: var(--radius-sm); 
+            border: 1px solid var(--clr-primary); 
+            cursor: pointer; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transition-main);
+        }
+
+        .btn-logout:hover { 
+            background: var(--clr-primary); 
+            color: var(--clr-text);
+            box-shadow: var(--shadow-glow);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2 id="logo-trigger" onclick="activateAdmin()" style="cursor: pointer; font-size: 30px; font-weight: 900; user-select: none;">
+            MD<span style="color:var(--clr-primary)">.</span>
+        </h2>
+        
+        <nav class="nav-group">
+            <a href="dashboard.html" class="nav-link active">DASHBOARD</a>
+            <a href="product.html" class="nav-link">MARKETPLACE</a>
+            <a href="transaction.html" class="nav-link">TRANSACTIONS</a>
+            <a href="setting.html" class="nav-link">SETTINGS</a>
+        </nav>
+
+        <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="header-section">
+            <h1 style="font-size: 42px; font-weight: 900;">Welcome, <span id="user-display" style="color:var(--clr-primary)">User</span></h1>
+            <p style="color: var(--clr-gray); font-size: 18px; margin-top: 8px;">System online. Ready for management.</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Liquidity</span>
+                <div class="stat-value" id="balance-display">₱0.00</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-label">Total Assets</span>
+                <div class="stat-value" id="order-count">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-label">Security Tier</span>
+                <div class="stat-value">PLATINUM</div>
+            </div>
+        </div>
+
+        <section class="history-section">
+            <h2 style="font-size: 24px; font-weight: 800;">Recent Transactions</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Asset Name</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="history-rows"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="adminPanel" class="admin-modal">
+        <div class="admin-card">
+            <h2>TERMINAL ACCESS</h2>
+            <button class="btn-admin" onclick="adminAddCash()">+ ₱50,000 CASH</button>
+            <button class="btn-admin" onclick="adminResetOrders()">RESET ASSETS</button>
+            <button class="btn-admin" onclick="adminWipeHistory()">WIPE HISTORY</button>
+            <button class="btn-admin" onclick="closeAdmin()" style="margin-top:20px; color:var(--clr-gray); font-size:12px; border:none;">EXIT TERMINAL</button>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'task.html';
+        }
+
+        function loadDashboard() {
+            const currentUsername = localStorage.getItem('regUser') || 'User';
+            let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            let userData = db.find(u => u.username === currentUsername);
+
+            const balanceValue = userData ? parseFloat(userData.balance) : parseFloat(localStorage.getItem('userBalance') || 0);
+            const history = userData && userData.transactions ? userData.transactions : [];
+            const ordersCount = history.length;
+
+            document.getElementById('user-display').innerText = currentUsername;
+            document.getElementById('order-count').innerText = ordersCount;
+            animateValue("balance-display", 0, balanceValue, 1000);
+
+            const tableBody = document.getElementById('history-rows');
+            if (history.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--clr-gray); padding: 40px;">No recent activity detected.</td></tr>`;
+            } else {
+                tableBody.innerHTML = [...history].reverse().slice(0, 4).map(t => `
+                    <tr>
+                        <td style="font-weight:700;">${t.item}</td>
+                        <td style="color:var(--clr-gray);">${t.date}</td>
+                        <td style="color:var(--clr-primary); font-weight:700;">₱${t.cost.toLocaleString()}</td>
+                        <td><span class="status-badge">COMPLETED</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                obj.innerText = '₱' + current.toLocaleString();
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function logout() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = '0.5s';
+            setTimeout(() => {
+                localStorage.removeItem('isLoggedIn');
+                window.location.href = 'index.html';
+            }, 500);
+        }
+
+        let clickCount = 0;
+        let lastClickTime = 0;
+        let failedAttempts = 0;
+        let lockoutEndTime = 0;
+
+        function activateAdmin() {
+            const now = Date.now();
+            if (now < lockoutEndTime) {
+                const secondsLeft = Math.ceil((lockoutEndTime - now) / 1000);
+                alert(`TERMINAL LOCKED: Try again in ${secondsLeft}s.`);
+                return;
+            }
+            if (now - lastClickTime > 1000) clickCount = 0;
+            clickCount++;
+            lastClickTime = now;
+
+            if (clickCount === 5) {
+                clickCount = 0;
+                const enteredPin = prompt("SYSTEM IDENTIFIED. ENTER SECURITY PIN:");
+                if (enteredPin === "1234") {
+                    failedAttempts = 0;
+                    document.getElementById('adminPanel').style.display = 'flex';
+                } else if (enteredPin !== null) {
+                    failedAttempts++;
+                    if (failedAttempts >= 3) {
+                        lockoutEndTime = Date.now() + 30000; 
+                        alert("SECURITY BREACH: System lockdown active for 30 seconds.");
+                    } else {
+                        alert(`INVALID PIN. Attempts left: ${3 - failedAttempts}`);
+                    }
+                }
+            }
+        }
+
+        function closeAdmin() { document.getElementById('adminPanel').style.display = 'none'; }
+
+        function adminAddCash() {
+            const currentUsername = localStorage.getItem('regUser');
+            let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            let userIndex = db.findIndex(u => u.username === currentUsername);
+            if(userIndex !== -1) {
+                db[userIndex].balance = parseFloat(db[userIndex].balance) + 50000;
+                localStorage.setItem('userDatabase', JSON.stringify(db));
+                localStorage.setItem('userBalance', db[userIndex].balance);
+                location.reload();
+            }
+        }
+
+        function adminResetOrders() {
+            const currentUsername = localStorage.getItem('regUser');
+            let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            let userIndex = db.findIndex(u => u.username === currentUsername);
+            if(userIndex !== -1) {
+                db[userIndex].transactions = [];
+                localStorage.setItem('userDatabase', JSON.stringify(db));
+                localStorage.setItem('orderCount', '0');
+                location.reload();
+            }
+        }
+
+        function adminWipeHistory() {
+            const currentUsername = localStorage.getItem('regUser');
+            let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            let userIndex = db.findIndex(u => u.username === currentUsername);
+            if(userIndex !== -1) {
+                db[userIndex].transactions = [];
+                localStorage.setItem('userDatabase', JSON.stringify(db));
+                localStorage.setItem('transactions', '[]');
+                location.reload();
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
