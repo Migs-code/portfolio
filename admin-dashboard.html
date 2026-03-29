@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD - Global User Oversight</title>
+    <style>
+        :root {
+            --clr-primary: #ff4757;
+            --clr-bg: #0a0a0a;
+            --clr-panel: #161616;
+            --clr-text: #ffffff;
+            --clr-gray: #888888;
+            --border-ui: rgba(255, 255, 255, 0.05);
+            --radius: 12px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--clr-bg); color: var(--clr-text); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 280px; background: var(--clr-panel); padding: 30px; border-right: 1px solid var(--border-ui); display: flex; flex-direction: column; }
+        .main { flex: 1; padding: 40px; overflow-y: auto; scroll-behavior: smooth; }
+
+        .stat-card { background: var(--clr-panel); padding: 25px; border-radius: var(--radius); border: 1px solid var(--border-ui); margin-bottom: 25px; border-left: 5px solid var(--clr-primary); }
+        
+        .search-box { width: 100%; padding: 15px; background: #000; border: 1px solid var(--border-ui); border-radius: 8px; color: white; margin-bottom: 20px; outline: none; transition: var(--transition); }
+        .search-box:focus { border-color: var(--clr-primary); box-shadow: 0 0 15px rgba(255, 71, 87, 0.1); }
+        
+        .user-grid { width: 100%; border-collapse: collapse; background: var(--clr-panel); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border-ui); }
+        .user-grid th { text-align: left; padding: 18px; color: var(--clr-gray); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-ui); }
+        .user-grid td { padding: 18px; border-bottom: 1px solid var(--border-ui); font-size: 14px; vertical-align: middle; }
+        
+        .pass-cell { font-family: 'Cascadia Code', monospace; color: var(--clr-primary); background: rgba(255,71,87,0.05); padding: 6px 10px; border-radius: 4px; cursor: pointer; border: 1px dashed rgba(255,71,87,0.3); }
+        
+        .btn { background: #222; border: 1px solid #333; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; transition: var(--transition); text-transform: uppercase; }
+        .btn:hover { background: var(--clr-primary); border-color: var(--clr-primary); transform: translateY(-2px); }
+        .btn-danger { border-color: #ff4757; color: #ff4757; }
+        .btn-danger:hover { background: #ff4757; color: white; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #111; padding: 40px; border-radius: 20px; border: 1px solid var(--border-ui); width: 95%; max-width: 550px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .log-item { border-bottom: 1px solid #222; padding: 12px 0; font-family: monospace; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        .injector-panel { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-ui); display: flex; align-items: center; gap: 15px; }
+        .injector-panel input { background: #000; border: 1px solid #333; color: white; padding: 10px; border-radius: 6px; flex: 1; outline: none; }
+        .injector-panel input:focus { border-color: var(--clr-primary); }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2 style="margin-bottom: 30px; letter-spacing: -1px;">MD<span style="color:var(--clr-primary)">.</span>ROOT</h2>
+        <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="loadUsers()">REFRESH SYSTEM</button>
+        <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="exportDB()">DOWNLOAD LOGS</button>
+        <button class="btn btn-danger" style="width: 100%; margin-top: auto;" onclick="wipe()">WIPE ALL DATA</button>
+    </aside>
+
+    <main class="main">
+        <div class="stat-card">
+            <p style="color:var(--clr-gray); font-size: 11px; font-weight: 800; letter-spacing: 2px;">SYSTEM OVERRIDE</p>
+            <h2 id="total-users" style="font-size: 32px; font-weight: 900;">0 NODES ACTIVE</h2>
+        </div>
+
+        <div class="injector-panel">
+            <input type="text" id="inj-user" placeholder="Target Username">
+            <input type="text" id="inj-pass" placeholder="Assign Password">
+            <button class="btn" onclick="manualInject()" style="background: var(--clr-primary);">Inject Account</button>
+        </div>
+
+        <input type="text" id="search" class="search-box" placeholder="Filter targets by username..." onkeyup="loadUsers()">
+
+        <table class="user-grid">
+            <thead>
+                <tr>
+                    <th>Target Node</th>
+                    <th>Access Key</th>
+                    <th>Liquidity</th>
+                    <th>Activity</th>
+                    <th>Execution</th>
+                </tr>
+            </thead>
+            <tbody id="user-rows"></tbody>
+        </table>
+    </main>
+
+    <div id="tx-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom: 5px; color: var(--clr-primary); font-size: 24px;">Transaction History</h3>
+            <p id="modal-subtitle" style="color: var(--clr-gray); font-size: 12px; margin-bottom: 25px;"></p>
+            <div id="log-container" style="max-height: 350px; overflow-y: auto; margin-bottom: 25px; padding-right: 10px;"></div>
+            <button class="btn" style="width: 100%; padding: 15px;" onclick="closeModal()">CLOSE UPLINK</button>
+        </div>
+    </div>
+
+    <script>
+        function manualInject() {
+            const u = document.getElementById('inj-user').value.trim();
+            const p = document.getElementById('inj-pass').value.trim();
+            if(!u || !p) return alert("Error: Fields cannot be empty.");
+
+            let db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            
+            if(db.some(user => user.username === u)) return alert("Error: Node already exists.");
+
+            db.push({
+                username: u,
+                password: p,
+                balance: 1250,
+                transactions: [],
+                regDate: new Date().toLocaleString()
+            });
+
+            localStorage.setItem('userDatabase', JSON.stringify(db));
+            document.getElementById('inj-user').value = '';
+            document.getElementById('inj-pass').value = '';
+            loadUsers();
+        }
+
+        function loadUsers() {
+            const db = JSON.parse(localStorage.getItem('userDatabase') || "[]");
+            const container = document.getElementById('user-rows');
+            const search = document.getElementById('search').value.toLowerCase();
+            
+            container.innerHTML = '';
+            let count = 0;
+
+            db.forEach((user, index) => {
+                if(user.username.toLowerCase().includes(search)) {
+                    count++;
+                    const txCount = user.transactions ? user.transactions.length : 0;
+                    container.innerHTML += `
+                        <tr>
+                            <td><b style="font-size: 16px;">${user.username}</b></td>
+                            <td><span class="pass-cell" onclick="editPass(${index})">${user.password}</span></td>
+                            <td style="color: #2ed573; font-weight: 800;">₱${parseFloat(user.balance).toLocaleString()}</td>
+                            <td><button class="btn" onclick="viewTransactions(${index})">${txCount} Logs</button></td>
+                            <td>
+                                <button class="btn" onclick="editBal(${index})">Edit</button>
+                                <button class="btn btn-danger" onclick="del(${index})">Del</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            document.getElementById('total-users').innerText = count + " NODES ACTIVE";
+        }
+
+        function viewTransactions(index) {
+            const db = JSON.parse(localStorage.getItem('userDatabase'));
+            const user = db[index];
+            const logContainer = document.getElementById('log-container');
+            document.getElementById('modal-title').innerText = user.username;
+            document.getElementById('modal-subtitle').innerText = "DATA INTERCEPTED ON " + new Date().toLocaleDateString();
+            
+            logContainer.innerHTML = '';
+            
+            if(!user.transactions || user.transactions.length === 0) {
+                logContainer.innerHTML = `<p style="color: #444; text-align: center; padding: 20px;">No transaction logs found for this node.</p>`;
+            } else {
+                user.transactions.forEach(tx => {
+                    logContainer.innerHTML += `
+                        <div class="log-item">
+                            <div>
+                                <div style="font-weight: 700; color: white;">${tx.item}</div>
+                                <div style="font-size: 10px; color: var(--clr-gray);">${tx.date}</div>
+                            </div>
+                            <span style="color: var(--clr-primary); font-weight: 800;">-₱${tx.cost}</span>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('tx-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('tx-modal').style.display = 'none';
+        }
+
+        function editBal(i) {
+            let db = JSON.parse(localStorage.getItem('userDatabase'));
+            let val = prompt(`Update Liquidity for ${db[i].username}:`, db[i].balance);
+            if(val !== null && !isNaN(val)) { 
+                db[i].balance = parseFloat(val); 
+                localStorage.setItem('userDatabase', JSON.stringify(db)); 
+                
+                if(localStorage.getItem('regUser') === db[i].username) {
+                    localStorage.setItem('userBalance', val);
+                }
+                loadUsers(); 
+            }
+        }
+
+        function editPass(i) {
+            let db = JSON.parse(localStorage.getItem('userDatabase'));
+            let val = prompt(`Reset Access Key for ${db[i].username}:`, db[i].password);
+            if(val) { 
+                db[i].password = val; 
+                localStorage.setItem('userDatabase', JSON.stringify(db)); 
+                loadUsers(); 
+            }
+        }
+
+        function del(i) {
+            let db = JSON.parse(localStorage.getItem('userDatabase'));
+            if(confirm(`PERMANENTLY TERMINATE NODE: ${db[i].username}?`)) {
+                if(localStorage.getItem('regUser') === db[i].username) {
+                    localStorage.removeItem('regUser');
+                    localStorage.removeItem('userBalance');
+                }
+                db.splice(i, 1);
+                localStorage.setItem('userDatabase', JSON.stringify(db));
+                loadUsers();
+            }
+        }
+
+        function wipe() {
+            if(confirm("CRITICAL WARNING: This will delete all users and transactions. Proceed?")) { 
+                localStorage.clear(); 
+                location.reload(); 
+            }
+        }
+
+        function exportDB() {
+            const data = localStorage.getItem('userDatabase');
+            if(!data) return alert("No data to export.");
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `md_syslog_${new Date().getTime()}.json`;
+            a.click();
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
